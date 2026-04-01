@@ -1156,6 +1156,57 @@ class Message(ChatGetter, SenderGetter, TLObject):
             return await self._client.unpin_message(
                 await self.get_input_chat(), self.id)
 
+    async def react(self, emoji, *, big=False, add_to_recent=True):
+        """
+        Sends a reaction to this message.
+
+        Args:
+            emoji (`str` | `int` | ``None``):
+                The emoji to react with (e.g. ``'👍'``).
+                Pass an ``int`` to use a custom emoji (document ID).
+                Pass ``None`` to remove all your reactions from this message.
+
+            big (`bool`, optional):
+                Whether to show a "big" animation (like in the official
+                client when you long-press a reaction).
+
+            add_to_recent (`bool`, optional):
+                Whether to add this emoji to your recent reactions list.
+
+        Example
+            .. code-block:: python
+
+                await message.react('🔥')
+                await message.react(None)          # remove reaction
+                await message.react(5123456789, )  # custom emoji
+        """
+        if not self._client:
+            return
+
+        if emoji is None:
+            reaction = []
+        elif isinstance(emoji, int):
+            reaction = [types.ReactionCustomEmoji(document_id=emoji)]
+        else:
+            reaction = [types.ReactionEmoji(emoticon=emoji)]
+
+        return await self._client(
+            functions.messages.SendReactionRequest(
+                peer=await self.get_input_chat(),
+                msg_id=self.id,
+                reaction=reaction,
+                big=big,
+                add_to_recent=add_to_recent,
+            )
+        )
+
+    async def unreact(self):
+        """
+        Removes all your reactions from this message. Alias for
+        ``await message.react(None)``.
+        """
+        return await self.react(None)
+
     # endregion Public Methods
 
     # region Private Methods
