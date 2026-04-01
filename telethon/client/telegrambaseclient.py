@@ -399,6 +399,10 @@ class TelegramBaseClient(abc.ABC):
 
         self._authorized = None  # None = unknown, False = no, True = yes
 
+        # Per-session RPC call statistics printed on disconnect
+        self._session_stats: collections.Counter = collections.Counter()
+        self._session_start: float = time.time()
+
         # Some further state for subclasses
         self._event_builders = []
 
@@ -722,10 +726,56 @@ class TelegramBaseClient(abc.ABC):
                 )
             )
 
+    @property
+    def session_stats(self: 'TelegramClient') -> 'collections.Counter':
+        """A snapshot of RPC call counts made during this session.
+
+        Keys are TL request class names (e.g. ``'SendMessageRequest'``);
+        values are the number of times that method was called.
+
+        Example
+            .. code-block:: python
+
+                print(client.session_stats.most_common(5))
+        """
+        return collections.Counter(self._session_stats)
+
+    def _print_session_stats(self: 'TelegramClient') -> None:
+        """Print a session summary table to stderr. Called automatically on disconnect."""
+        import sys
+        if not self._session_stats:
+            return
+        elapsed = time.time() - self._session_start
+        hours, rem = divmod(int(elapsed), 3600)
+        minutes, seconds = divmod(rem, 60)
+        if hours:
+            duration = f'{hours}h {minutes}m {seconds}s'
+        elif minutes:
+            duration = f'{minutes}m {seconds}s'
+        else:
+            duration = f'{seconds}s'
+        total = sum(self._session_stats.values())
+        top = self._session_stats.most_common()
+        col_w = max(len(m) for m, _ in top)
+        col_w = max(col_w, 38)
+        width = col_w + 12
+        bar = '\u2501' * width  # ━
+        print(f'\n{bar}', file=sys.stderr)
+        print(f'  Session Statistics', file=sys.stderr)
+        print(f'  Duration   : {duration}', file=sys.stderr)
+        print(f'  Total calls: {total:,}', file=sys.stderr)
+        print(f'', file=sys.stderr)
+        print(f'  {"Method":<{col_w}}  {"Calls":>6}', file=sys.stderr)
+        print(f'  {"-" * col_w}  {"------"}', file=sys.stderr)
+        for method, count in top:
+            print(f'  {method:<{col_w}}  {count:>6,}', file=sys.stderr)
+        print(f'{bar}\n', file=sys.stderr)
+
     async def _disconnect_coro(self: 'TelegramClient'):
         if self.session is None:
             return  # already logged out and disconnected
 
+        self._print_session_stats()
         await self._disconnect()
 
         # Also clean-up all exported senders because we're done with them

@@ -27,6 +27,11 @@ def _fmt_flood(delay, request, *, early=False, td=datetime.timedelta):
 
 class UserMethods:
     async def __call__(self: 'TelegramClient', request, ordered=False, flood_sleep_threshold=None):
+        if utils.is_list_like(request):
+            for r in request:
+                self._session_stats[type(r).__name__] += 1
+        else:
+            self._session_stats[type(request).__name__] += 1
         return await self._call(self._sender, request, ordered=ordered)
 
     async def _call(self: 'TelegramClient', sender, request, ordered=False, flood_sleep_threshold=None):
