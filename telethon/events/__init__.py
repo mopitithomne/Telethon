@@ -8,6 +8,7 @@ from .newmessage import NewMessage
 from .userupdate import UserUpdate
 from .callbackquery import CallbackQuery
 from .inlinequery import InlineQuery
+from .story import Story
 
 
 _HANDLERS_ATTRIBUTE = '__tl.handlers'
