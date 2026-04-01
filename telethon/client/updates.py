@@ -260,6 +260,76 @@ class UpdateMethods:
         """
         await self._updates_queue.put(types.UpdatesTooLong())
 
+    async def wait_for(
+            self: 'TelegramClient',
+            event: 'EventBuilder',
+            *,
+            timeout: float = None,
+    ):
+        """
+        Waits for a **single** event that matches the given ``event`` builder
+        and returns it.  The handler is automatically removed afterwards.
+
+        This is a simpler, lower-boilerplate alternative to
+        :class:`~telethon.tl.custom.conversation.Conversation` when you only
+        need to wait for one specific update.
+
+        Args:
+            event (`EventBuilder` | `type`):
+                The event to wait for, e.g. ``events.NewMessage(from_users='me')``.
+                Accepts both an instance and a bare class (will be instantiated
+                with no arguments).
+
+            timeout (`float`, optional):
+                Seconds to wait before raising :exc:`asyncio.TimeoutError`.
+                Defaults to ``None`` (wait forever).
+
+        Returns:
+            The matched event object.
+
+        Raises:
+            :exc:`asyncio.TimeoutError`: If ``timeout`` elapses with no match.
+
+        Example
+            .. code-block:: python
+
+                from telethon import events
+
+                # Wait for the user to reply within 30 seconds
+                try:
+                    reply = await client.wait_for(
+                        events.NewMessage(from_users=user_id),
+                        timeout=30,
+                    )
+                    await reply.respond(f'You said: {reply.text}')
+                except asyncio.TimeoutError:
+                    await client.send_message(user_id, 'You took too long!')
+
+                # Wait for a button click on a specific message
+                click = await client.wait_for(
+                    events.CallbackQuery(data=b'confirm'),
+                    timeout=60,
+                )
+                await click.answer('Confirmed!')
+        """
+        fut: asyncio.Future = asyncio.get_event_loop().create_future()
+
+        if isinstance(event, type):
+            event = event()
+
+        async def _one_shot_handler(ev):
+            if not fut.done():
+                fut.set_result(ev)
+            raise events.StopPropagation
+
+        self.add_event_handler(_one_shot_handler, event)
+        try:
+            if timeout is not None:
+                return await asyncio.wait_for(asyncio.shield(fut), timeout)
+            return await fut
+        finally:
+            self.remove_event_handler(_one_shot_handler, event)
+
     # endregion
 
     # region Private methods
