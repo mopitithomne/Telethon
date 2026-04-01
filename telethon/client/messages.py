@@ -1521,6 +1521,77 @@ class MessageMethods:
         # Pinning a message that doesn't exist would RPC-error earlier
         return self._get_response_message(request, result, entity)
 
+    async def get_scheduled_messages(
+            self: 'TelegramClient',
+            entity: 'hints.EntityLike',
+    ) -> 'typing.List[types.Message]':
+        """
+        Returns all currently scheduled messages in a chat.
+
+        Arguments
+            entity (`entity`):
+                The chat to retrieve scheduled messages from.
+
+        Returns
+            A list of `Message <telethon.tl.custom.message.Message>` objects
+            that are scheduled (not yet sent).
+
+        Example
+            .. code-block:: python
+
+                scheduled = await client.get_scheduled_messages(chat)
+                for msg in scheduled:
+                    print(msg.id, msg.date, msg.text)
+        """
+        peer = await self.get_input_entity(entity)
+        result = await self(functions.messages.GetScheduledHistoryRequest(
+            peer=peer,
+            hash=0,
+        ))
+        entities = {
+            utils.get_peer_id(x): x
+            for x in itertools.chain(result.users, result.chats)
+        }
+        messages = []
+        for msg in result.messages:
+            if not isinstance(msg, types.MessageEmpty):
+                msg._finish_init(self, entities, peer)
+                messages.append(msg)
+        return messages
+
+    async def delete_scheduled_messages(
+            self: 'TelegramClient',
+            entity: 'hints.EntityLike',
+            message_ids: 'typing.Union[int, typing.Sequence[int]]',
+    ) -> bool:
+        """
+        Deletes one or more scheduled (not-yet-sent) messages.
+
+        Arguments
+            entity (`entity`):
+                The chat the scheduled messages belong to.
+
+            message_ids (`int` | `list`):
+                The ID(s) of the scheduled messages to delete.
+
+        Returns
+            ``True`` on success.
+
+        Example
+            .. code-block:: python
+
+                await client.delete_scheduled_messages(chat, [msg_id1, msg_id2])
+        """
+        peer = await self.get_input_entity(entity)
+        if not utils.is_list_like(message_ids):
+            message_ids = [message_ids]
+
+        await self(functions.messages.DeleteScheduledMessagesRequest(
+            peer=peer,
+            id=list(message_ids),
+        ))
+        return True
+
     # endregion
 
     # endregion
