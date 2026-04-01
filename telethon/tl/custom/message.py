@@ -1156,6 +1156,28 @@ class Message(ChatGetter, SenderGetter, TLObject):
             return await self._client.unpin_message(
                 await self.get_input_chat(), self.id)
 
+    async def translate(self, to_lang: str) -> str:
+        """
+        Translates this message's text using Telegram's built-in translation
+        API. Requires Telegram Premium.
+
+        Args:
+            to_lang (`str`):
+                Two-letter language code to translate into (e.g. ``'en'``).
+
+        Returns:
+            The translated text as a `str`.
+
+        Example
+            .. code-block:: python
+
+                translated = await message.translate('en')
+                await message.reply(translated)
+        """
+        if self._client:
+            return await self._client.translate_message(
+                await self.get_input_chat(), self.id, to_lang)
+
     # endregion Public Methods
 
     # region Private Methods

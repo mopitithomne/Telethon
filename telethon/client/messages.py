@@ -1521,6 +1521,97 @@ class MessageMethods:
         # Pinning a message that doesn't exist would RPC-error earlier
         return self._get_response_message(request, result, entity)
 
+    async def translate_message(
+            self: 'TelegramClient',
+            entity: 'hints.EntityLike',
+            message: 'typing.Union[int, types.Message]',
+            to_lang: str,
+    ) -> str:
+        """
+        Translates a message's text using Telegram's built-in translation API
+        (:tl:`messages.translateText`).
+
+        Requires Telegram Premium on the account.
+
+        Arguments
+            entity (`entity`):
+                The chat the message belongs to.
+
+            message (`int` | `Message <telethon.tl.custom.message.Message>`):
+                The message to translate, or its integer ID.
+
+            to_lang (`str`):
+                The two-letter language code to translate into (e.g. ``'en'``,
+                ``'es'``, ``'de'``).
+
+        Returns
+            The translated text as a `str`, or ``None`` if the translation
+            result is empty.
+
+        Example
+            .. code-block:: python
+
+                text = await client.translate_message(chat, message_id, 'en')
+                print(text)
+
+                # Or using the bound method on a received message:
+                text = await message.translate('en')
+                print(text)
+        """
+        peer = await self.get_input_entity(entity)
+        msg_id = utils.get_message_id(message)
+
+        result = await self(functions.messages.TranslateTextRequest(
+            peer=peer,
+            id=[msg_id],
+            to_lang=to_lang,
+        ))
+
+        if result.result:
+            return result.result[0].text
+        return None
+
+    async def translate_text(
+            self: 'TelegramClient',
+            text: str,
+            to_lang: str,
+            from_lang: str = None,
+    ) -> str:
+        """
+        Translates arbitrary text using Telegram's built-in translation API.
+
+        Requires Telegram Premium on the account.
+
+        Arguments
+            text (`str`):
+                The text to translate.
+
+            to_lang (`str`):
+                The target language code (e.g. ``'en'``).
+
+            from_lang (`str`, optional):
+                The source language code. Let Telegram auto-detect if omitted.
+
+        Returns
+            The translated text as a `str`.
+
+        Example
+            .. code-block:: python
+
+                result = await client.translate_text('Привет мир', 'en')
+                print(result)  # Hello world
+        """
+        result = await self(functions.messages.TranslateTextRequest(
+            to_lang=to_lang,
+            text=[types.TextWithEntities(text=text, entities=[])],
+            # from_lang is optional; leave out if not set
+            **({'from_lang': from_lang} if from_lang else {}),
+        ))
+
+        if result.result:
+            return result.result[0].text
+        return None
+
     # endregion
 
     # endregion
