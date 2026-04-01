@@ -399,6 +399,10 @@ class TelegramBaseClient(abc.ABC):
 
         self._authorized = None  # None = unknown, False = no, True = yes
 
+        # Banner shown once on first successful connection (set to False to suppress)
+        self.show_banner = True
+        self._banner_shown = False
+
         # Some further state for subclasses
         self._event_builders = []
 
@@ -618,6 +622,11 @@ class TelegramBaseClient(abc.ABC):
 
         self._updates_handle = self.loop.create_task(self._update_loop())
         self._keepalive_handle = self.loop.create_task(self._keepalive_loop())
+
+        if self.show_banner and not self._banner_shown:
+            self._banner_shown = True
+            from ..contrib.banner import print_banner
+            print_banner()
 
     def is_connected(self: 'TelegramClient') -> bool:
         """
