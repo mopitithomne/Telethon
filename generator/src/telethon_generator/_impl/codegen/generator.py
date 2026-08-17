@@ -20,8 +20,8 @@ from .serde.serialization import generate_function, generate_write
 def generate_init(
     writer: SourceWriter, namespaces: set[str], classes: set[str]
 ) -> None:
-    sorted_cls = list(sorted(classes))
-    sorted_ns = list(sorted(namespaces))
+    sorted_cls = sorted(classes)
+    sorted_ns = sorted(namespaces)
 
     if sorted_cls:
         sorted_import = ", ".join(sorted_cls)
@@ -97,8 +97,7 @@ def generate(fs: FakeFs, tl: ParsedTl) -> None:
                 "# pyright: reportUnusedImport=false, reportConstantRedefinition=false"
             )
             writer.write("import struct")
-            writer.write("from typing import Optional, Sequence")
-            writer.write("from typing_extensions import Self")
+            writer.write("from typing import Optional, Self, Sequence")
             writer.write("from .. import abcs")
             writer.write("from ..core import Reader, Serializable, serialize_bytes_to")
             writer.write("_bytes = bytes | bytearray | memoryview")
@@ -164,23 +163,22 @@ def generate(fs: FakeFs, tl: ParsedTl) -> None:
         if function_path not in fs:
             writer.write("# pyright: reportUnusedImport=false")
             writer.write("import struct")
-            writer.write("from typing import Optional, Sequence, TypeVar")
-            writer.write("from typing_extensions import Self")
+            writer.write("from typing import Optional, Self, Sequence")
             writer.write("from .. import abcs")
             writer.write("from ..core import Request, serialize_bytes_to")
             writer.write("_bytes = bytes | bytearray | memoryview")
-            writer.write('Return = TypeVar("Return")')
 
         #   def name(params, ...)
         required_params = [p for p in functiondef.params if not is_computed(p.ty)]
         params = "".join(f", {p.name}: {param_type_fmt(p.ty)}" for p in required_params)
         star = "*" if params else ""
+        type_var = "[Return]" if functiondef.ty.generic_ref else ""
         if functiondef.ty.generic_ref:
             return_ty = "Return"
         else:
             return_ty = param_type_fmt(NormalParameter(ty=functiondef.ty, flag=None))
         writer.write(
-            f"def {to_method_name(functiondef.name)}({star}{params}) -> Request[{return_ty}]:"
+            f"def {to_method_name(functiondef.name)}{type_var}({star}{params}) -> Request[{return_ty}]:"
         )
         writer.indent(2)
         generate_function(writer, functiondef)

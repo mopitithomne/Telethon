@@ -7,7 +7,7 @@ authors = [
 readme = "README.rst"
 license = "MIT OR Apache-2.0"
 license-files = ["LICENSE-MIT", "LICENSE-APACHE"]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 keywords = ["telegram", "chat", "messaging", "mtproto", "telethon"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -22,7 +22,6 @@ dependencies = [
   # "pyaes~=1.6",
   # "rsa~=4.9",
   "markdown-it-py~=3.0",
-  "typing-extensions~=4.12.2",
 ]
 dynamic = ["version"]
 
@@ -54,6 +53,17 @@ build-backend = "maturin"
 module-name = "telethon._rs"
 manifest-path = "Cargo.toml"
 python-source = "client/src/"
+include = [
+  { path = "**/tl/__init__.py", format = "wheel" },
+  { path = "**/tl/layer.py", format = "wheel" },
+  { path = "**/tl/abcs/*", format = "wheel" },
+  { path = "**/tl/functions/*", format = "wheel" },
+  { path = "**/tl/types/*", format = "wheel" },
+  { path = "**/mtproto/layer.py", format = "wheel" },
+  { path = "**/mtproto/abcs/*", format = "wheel" },
+  { path = "**/mtproto/functions/*", format = "wheel" },
+  { path = "**/mtproto/types/*", format = "wheel" },
+]
 
 [tool.setuptools.dynamic]
 version = {attr = "telethon.version.__version__"}

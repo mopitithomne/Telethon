@@ -1,13 +1,12 @@
+import inspect
 import struct
-from collections.abc import Callable
-from typing import Any, Generic, Optional, TypeVar
-
-Return = TypeVar("Return")
+from collections.abc import Buffer, Callable
+from typing import Any
 
 
 def _bootstrap_get_deserializer(
     constructor_id: int,
-) -> Optional[Callable[[bytes], Any]]:
+) -> Callable[[bytes], Any] | None:
     # Similar to Reader's bootstrapping.
     if Request._get_deserializer is _bootstrap_get_deserializer:
         from ..layer import RESPONSE_MAPPING as API_DESER
@@ -24,18 +23,26 @@ def _bootstrap_get_deserializer(
     return Request._get_deserializer(constructor_id)
 
 
-class Request(Generic[Return]):
-    __slots__ = ("data", "_target_cid")
+class Request[Return]:
+    __slots__ = ("_target_cid", "data", "view")
 
-    def __init__(self, data: bytes, *, target_cid: Optional[int] = None):
+    def __init__(self, data: Buffer, *, target_cid: int | None = None):
         self.data = bytes(data)
+        self.view: memoryview | None = None
         self._target_cid = target_cid
 
     def __buffer__(self, flags: int, /) -> memoryview:
-        return memoryview(self.data).__buffer__(flags)
+        if flags != inspect.BufferFlags.FULL_RO:
+            raise TypeError("Only BufferFlags.FULL_RO supported")
+        if self.view is not None:
+            raise RuntimeError("Buffer already held")
+        self.view = memoryview(self.data)
+        return self.view
 
-    def __release_buffer__(self, buffer: memoryview, /) -> None:
-        pass
+    def __release_buffer__(self, view: memoryview, /) -> None:
+        assert self.view is view
+        self.view.release()
+        self.view = None
 
     @property
     def constructor_id(self) -> int:

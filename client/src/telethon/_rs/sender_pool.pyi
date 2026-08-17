@@ -1,8 +1,8 @@
 from collections.abc import Buffer
-from typing import final, Self
+from typing import Self, final
 
 from .session import Session
-from .session.updates import MessageBoxes, UpdateAndPeers
+from .session.updates import UpdateAndPeers
 
 @final
 class SenderPool:
@@ -17,6 +17,7 @@ class SenderPool:
         app_version: str = "",
         system_lang_code: str = "",
         lang_code: str = "",
+        catch_up: bool = False,
     ) -> Self: ...
     @property
     def session(self) -> Session: ...
@@ -36,8 +37,6 @@ class SenderPool:
     def system_lang_code(self) -> str: ...
     @property
     def lang_code(self) -> str: ...
-    @property
-    def _message_box(self) -> MessageBoxes: ...
     async def is_connected(self) -> None: ...
     async def invoke_in_dc(self, dc_id: int, body: Buffer) -> bytes: ...
     async def invoke(self, body: Buffer) -> bytes: ...

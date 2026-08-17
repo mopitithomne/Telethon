@@ -1,14 +1,11 @@
-from typing import Optional, TypeAlias, TypeVar
-
 from ...tl import abcs, types
 from .buttons import Button, InlineButton
 
-AnyButton = TypeVar("AnyButton", bound=Button)
-AnyInlineButton = TypeVar("AnyInlineButton", bound=InlineButton)
+type KeyboardType = Keyboard | InlineKeyboard | HiddenKeyboard | ForcedReplyKeyboard
 
 
-def _build_keyboard_rows(
-    btns: list[AnyButton] | list[list[AnyButton]],
+def _build_keyboard_rows[T: Button](
+    btns: list[T] | list[list[T]],
 ) -> list[abcs.KeyboardButtonRow]:
     # list[button] -> list[list[button]]
     # This does allow for "invalid" inputs (mixing lists and non-lists), but that's acceptable.
@@ -27,15 +24,15 @@ def _build_keyboard_rows(
 class Keyboard:
     __slots__ = ("_raw",)
 
-    def __init__(
+    def __init__[T: Button](
         self,
-        buttons: list[AnyButton] | list[list[AnyButton]],
+        buttons: list[T] | list[list[T]],
         *,
         resize: bool,
         single_use: bool,
         selective: bool,
         persistent: bool,
-        placeholder: Optional[str],
+        placeholder: str | None,
     ) -> None:
         self._raw = types.ReplyKeyboardMarkup(
             resize=resize,
@@ -50,9 +47,7 @@ class Keyboard:
 class InlineKeyboard:
     __slots__ = ("_raw",)
 
-    def __init__(
-        self, buttons: list[AnyInlineButton] | list[list[AnyInlineButton]]
-    ) -> None:
+    def __init__[T: InlineButton](self, buttons: list[T] | list[list[T]]) -> None:
         self._raw = types.ReplyInlineMarkup(rows=_build_keyboard_rows(buttons))
 
 
@@ -67,13 +62,8 @@ class ForcedReplyKeyboard:
     __slots__ = ("_raw",)
 
     def __init__(
-        self, *, single_use: bool, selective: bool, placeholder: Optional[str]
+        self, *, single_use: bool, selective: bool, placeholder: str | None
     ) -> None:
         self._raw = types.ReplyKeyboardForceReply(
             single_use=single_use, selective=selective, placeholder=placeholder
         )
-
-
-KeyboardType: TypeAlias = (
-    Keyboard | InlineKeyboard | HiddenKeyboard | ForcedReplyKeyboard
-)

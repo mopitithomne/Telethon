@@ -3,9 +3,7 @@ Class definitions stolen from `trio`, with some modifications.
 """
 
 import abc
-from typing import Any, Type, TypeVar
-
-T = TypeVar("T")
+from typing import Any
 
 
 class Final(abc.ABCMeta):
@@ -35,5 +33,5 @@ class NoPublicConstructor(Final):
         )
 
     @property
-    def _create(cls: Type[T]) -> Type[T]:
+    def _create[T](cls: type[T]) -> type[T]:
         return super().__call__  # type: ignore

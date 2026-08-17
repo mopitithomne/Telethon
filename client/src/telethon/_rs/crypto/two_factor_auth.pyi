@@ -1,4 +1,4 @@
-from typing_extensions import Buffer
+from collections.abc import Buffer
 
 def calculate_2fa(
     *,
