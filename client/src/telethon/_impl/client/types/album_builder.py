@@ -58,24 +58,39 @@ class AlbumBuilder(metaclass=NoPublicConstructor):
         else:
             input_file, _ = await self._client._upload(file, size, "a.jpg")
             input_media = types.InputMediaUploadedPhoto(
-                spoiler=False, file=input_file, stickers=None, ttl_seconds=None
+                spoiler=False,
+                live_photo=False,
+                file=input_file,
+                stickers=None,
+                ttl_seconds=None,
+                video=None,
             )
 
         media = await self._client(
             functions.messages.upload_media(
-                peer=types.InputPeerSelf(), media=input_media
+                business_connection_id=None,
+                peer=types.InputPeerSelf(),
+                media=input_media,
             )
         )
         assert isinstance(media, types.MessageMediaPhoto)
         assert isinstance(media.photo, types.Photo)
         input_media = types.InputMediaPhoto(
             spoiler=media.spoiler,
+            live_photo=media.live_photo,
             id=types.InputPhoto(
                 id=media.photo.id,
                 access_hash=media.photo.access_hash,
                 file_reference=media.photo.file_reference,
             ),
             ttl_seconds=media.ttl_seconds,
+            video=types.InputDocument(
+                id=media.video.id,
+                access_hash=media.video.access_hash,
+                file_reference=media.video.file_reference,
+            )
+            if isinstance(media.video, types.Document)
+            else None,
         )
         message, entities = parse_message(
             text=caption, markdown=caption_markdown, html=caption_html, allow_empty=True
@@ -133,7 +148,11 @@ class AlbumBuilder(metaclass=NoPublicConstructor):
         if try_get_url_path(file) is not None:
             assert isinstance(file, str)
             input_media = types.InputMediaDocumentExternal(
-                spoiler=False, url=file, ttl_seconds=None
+                spoiler=False,
+                url=file,
+                ttl_seconds=None,
+                video_cover=None,
+                video_timestamp=None,
             )
         else:
             input_file, name = await self._client._upload(file, size, name)
@@ -154,6 +173,8 @@ class AlbumBuilder(metaclass=NoPublicConstructor):
                         w=width,
                         h=height,
                         preload_prefix_size=None,
+                        video_start_ts=None,
+                        video_codec=None,
                     )
                 )
             input_media = types.InputMediaUploadedDocument(
@@ -166,11 +187,15 @@ class AlbumBuilder(metaclass=NoPublicConstructor):
                 attributes=attributes,
                 stickers=None,
                 ttl_seconds=None,
+                video_cover=None,
+                video_timestamp=None,
             )
 
         media = await self._client(
             functions.messages.upload_media(
-                peer=types.InputPeerEmpty(), media=input_media
+                business_connection_id=None,
+                peer=types.InputPeerEmpty(),
+                media=input_media,
             )
         )
         assert isinstance(media, types.MessageMediaDocument)
@@ -182,6 +207,8 @@ class AlbumBuilder(metaclass=NoPublicConstructor):
                 access_hash=media.document.access_hash,
                 file_reference=media.document.file_reference,
             ),
+            video_cover=None,
+            video_timestamp=None,
             ttl_seconds=media.ttl_seconds,
             query=None,
         )
@@ -223,10 +250,20 @@ class AlbumBuilder(metaclass=NoPublicConstructor):
                     clear_draft=False,
                     noforwards=False,
                     update_stickersets_order=False,
+                    invert_media=False,
+                    allow_paid_floodskip=False,
                     peer=peer._ref._to_input_peer(),
                     reply_to=(
                         types.InputReplyToMessage(
-                            reply_to_msg_id=reply_to, top_msg_id=None
+                            reply_to_msg_id=reply_to,
+                            top_msg_id=None,
+                            reply_to_peer_id=None,
+                            quote_text=None,
+                            quote_entities=None,
+                            quote_offset=None,
+                            monoforum_peer_id=None,
+                            todo_item_id=None,
+                            poll_option=None,
                         )
                         if reply_to
                         else None
@@ -234,6 +271,9 @@ class AlbumBuilder(metaclass=NoPublicConstructor):
                     multi_media=self._medias,
                     schedule_date=None,
                     send_as=None,
+                    quick_reply_shortcut=None,
+                    effect=None,
+                    allow_paid_stars=None,
                 )
             ),
             peer._ref,

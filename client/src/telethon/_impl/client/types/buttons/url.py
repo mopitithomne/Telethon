@@ -1,4 +1,5 @@
-from ....tl import types
+from telethon._impl.tl import types
+
 from .inline_button import InlineButton
 
 
@@ -10,9 +11,19 @@ class Url(InlineButton):
     :param url: See below.
     """
 
-    def __init__(self, text: str, url: str | None = None) -> None:
-        super().__init__(text)
-        self._raw = types.KeyboardButtonUrl(text=text, url=url or text)
+    def __init__(
+        self,
+        text: str,
+        url: str | None = None,
+        *,
+        style: types.KeyboardButtonStyle,
+    ) -> None:
+        super().__init__(text, style=style)
+        self._raw = types.KeyboardButtonUrl(
+            text=text,
+            url=url or text,
+            style=style,
+        )
 
     @property
     def url(self) -> str:

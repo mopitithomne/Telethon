@@ -83,6 +83,15 @@ class ChatRestriction(Enum):
     SEND_PLAIN_MESSAGES = "send_plain"
     """Prevents sending plain text messages with no media to the chat."""
 
+    EDIT_RANK = "edit_rank"
+    """Prevents editing rank of chat participants."""
+
+    SEND_REACTIONS = "send_reactions"
+    """Prevents sending reactions."""
+
+    MANAGE_LINKED_PEERS = "manage_linked_peers"
+    """Prevents managing linked peers."""
+
     @classmethod
     def _from_raw(cls, rights: abcs.ChatBannedRights) -> set[ChatRestriction]:
         assert isinstance(rights, types.ChatBannedRights)
@@ -107,6 +116,9 @@ class ChatRestriction(Enum):
             cls.SEND_VOICE_NOTES if rights.send_voices else None,
             cls.SEND_DOCUMENTS if rights.send_docs else None,
             cls.SEND_PLAIN_MESSAGES if rights.send_plain else None,
+            cls.EDIT_RANK if rights.edit_rank else None,
+            cls.SEND_REACTIONS if rights.send_reactions else None,
+            cls.MANAGE_LINKED_PEERS if rights.manage_linked_peers else None,
         )
         return set(filter(None, iter(restrictions)))
 
@@ -135,5 +147,8 @@ class ChatRestriction(Enum):
             send_voices=cls.SEND_VOICE_NOTES in restrictions,
             send_docs=cls.SEND_DOCUMENTS in restrictions,
             send_plain=cls.SEND_PLAIN_MESSAGES in restrictions,
+            edit_rank=cls.EDIT_RANK in restrictions,
+            send_reactions=cls.SEND_REACTIONS in restrictions,
+            manage_linked_peers=cls.MANAGE_LINKED_PEERS in restrictions,
             until_date=until_date,
         )

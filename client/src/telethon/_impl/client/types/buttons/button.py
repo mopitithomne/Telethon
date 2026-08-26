@@ -4,7 +4,7 @@ import abc
 import weakref
 from typing import TYPE_CHECKING
 
-from ....tl import types
+from telethon._impl.tl import types
 
 if TYPE_CHECKING:
     from ..message import Message
@@ -48,13 +48,19 @@ class Button(abc.ABC):
     :param text: See below.
     """
 
-    def __init__(self, text: str) -> None:
+    # TODO: custom type KeyboardButtonStyle
+    def __init__(
+        self,
+        text: str,
+        *,
+        style: types.KeyboardButtonStyle,
+    ) -> None:
         if self.__class__ == Button:
             raise TypeError(
                 f"Can't instantiate abstract class {self.__class__.__name__}"
             )
 
-        self._raw: RawButtonType = types.KeyboardButton(text=text)
+        self._raw: RawButtonType = types.KeyboardButton(text=text, style=style)
         self._msg: weakref.ReferenceType[Message] | None = None
 
     @property

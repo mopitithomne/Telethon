@@ -85,6 +85,8 @@ class InlineResult(metaclass=NoPublicConstructor):
                     id=self._raw.id,
                     schedule_date=None,
                     send_as=None,
+                    quick_reply_shortcut=None,
+                    allow_paid_stars=None,
                 )
             ),
             peer,

@@ -104,11 +104,21 @@ class Message(metaclass=NoPublicConstructor):
             "edit_hide": False,
             "pinned": False,
             "noforwards": False,
+            "invert_media": False,
+            "offline": False,
+            "video_processing_pending": False,
+            "paid_suggested_post_stars": False,
+            "paid_suggested_post_ton": False,
             "id": id,
             "from_id": None,
+            "from_boosts_applied": None,
+            "from_rank": None,
             "peer_id": peer_id,
+            "saved_peer_id": None,
             "fwd_from": None,
             "via_bot_id": None,
+            "via_business_bot_id": None,
+            "guestchat_via_from": None,
             "reply_to": None,
             "date": date,
             "message": message,
@@ -124,6 +134,15 @@ class Message(metaclass=NoPublicConstructor):
             "reactions": None,
             "restriction_reason": None,
             "ttl_period": None,
+            "quick_reply_shortcut_id": None,
+            "effect": None,
+            "factcheck": None,
+            "report_delivery_until_date": None,
+            "paid_message_stars": None,
+            "suggested_post": None,
+            "schedule_repeat_period": None,
+            "summary_from_language": None,
+            "rich_message": None,
         }
         default_kwargs.update(kwargs)
         return cls._create(client, types.Message(**default_kwargs), chat_map)
@@ -201,7 +220,10 @@ class Message(metaclass=NoPublicConstructor):
         pid = peer_id(peer)
         if pid not in self._chat_map:
             self._chat_map[pid] = expand_peer(
-                self._client, peer, broadcast=getattr(self._raw, "post", None)
+                self._client,
+                peer,
+                broadcast=getattr(self._raw, "post", None),
+                monoforum=False,
             )
         return self._chat_map[pid]
 
@@ -216,7 +238,10 @@ class Message(metaclass=NoPublicConstructor):
         """
         if (from_ := getattr(self._raw, "from_id", None)) is not None:
             return self._chat_map.get(peer_id(from_)) or expand_peer(
-                self._client, from_, broadcast=getattr(self._raw, "post", None)
+                self._client,
+                from_,
+                broadcast=getattr(self._raw, "post", None),
+                monoforum=False,
             )
         else:
             return None
@@ -506,6 +531,13 @@ class Message(metaclass=NoPublicConstructor):
     def can_forward(self) -> bool:
         if isinstance(self._raw, types.Message):
             return not self._raw.noforwards
+        else:
+            return False
+
+    @property
+    def invert_media(self) -> bool:
+        if isinstance(self._raw, types.Message):
+            return self._raw.invert_media
         else:
             return False
 

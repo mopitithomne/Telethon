@@ -183,6 +183,7 @@ async def edit_draft(
             suggested_post=suggested_post,
             # TODO: InputRichMessage to RichMessage
             rich_message=types.RichMessage(
+                rtl=False,
                 part=False,
                 blocks=[],
                 photos=[],

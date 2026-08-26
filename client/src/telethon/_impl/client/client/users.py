@@ -66,10 +66,21 @@ async def resolve_phone(self: Client, phone: str, /) -> Peer:
     )
 
 
-async def resolve_username(self: Client, username: str, /) -> Peer:
+async def resolve_username(
+    self: Client,
+    username: str,
+    /,
+    *,
+    referer: str | None = None,
+) -> Peer:
     return resolved_peer_to_chat(
         self,
-        await self(functions.contacts.resolve_username(username=username)),
+        await self(
+            functions.contacts.resolve_username(
+                username=username,
+                referer=referer,
+            )
+        ),
     )
 
 
@@ -114,6 +125,12 @@ async def resolve_peers(self: Client, peers: Sequence[Peer | PeerRef], /) -> lis
 
     chat_map = build_chat_map(self, users, chats)
     return [
-        chat_map.get(ref.id) or expand_peer(self, ref._to_peer(), broadcast=None)
+        chat_map.get(ref.id)
+        or expand_peer(
+            self,
+            ref._to_peer(),
+            broadcast=None,
+            monoforum=False,
+        )
         for ref in refs
     ]

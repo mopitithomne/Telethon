@@ -64,7 +64,10 @@ class AdminRight(Enum):
     """Allows managing the direct messages monoforum and decline suggested posts."""
 
     MANAGE_RANKS = "manage_ranks"
-    """Allows managing the ranks of group participants"""
+    """Allows managing the ranks of group participants."""
+
+    MANAGE_LINKED_PEERS = "manage_linked_peers"
+    """Allows managing linked peers."""
 
     @classmethod
     def _from_raw(cls, rights: abcs.ChatAdminRights) -> set[AdminRight]:
@@ -87,6 +90,7 @@ class AdminRight(Enum):
             cls.DELETE_STORIES if rights.delete_stories else None,
             cls.MANAGE_DIRECT_MESSAGES if rights.manage_direct_messages else None,
             cls.MANAGE_RANKS if rights.manage_ranks else None,
+            cls.MANAGE_LINKED_PEERS if rights.manage_linked_peers else None,
         )
         return set(filter(None, iter(all_rights)))
 
@@ -108,6 +112,9 @@ class AdminRight(Enum):
             cls.POST_STORIES,
             cls.EDIT_STORIES,
             cls.DELETE_STORIES,
+            cls.MANAGE_DIRECT_MESSAGES,
+            cls.MANAGE_RANKS,
+            cls.MANAGE_LINKED_PEERS,
         }
 
     @classmethod
@@ -128,4 +135,7 @@ class AdminRight(Enum):
             post_stories=cls.POST_STORIES in all_rights,
             edit_stories=cls.EDIT_STORIES in all_rights,
             delete_stories=cls.DELETE_STORIES in all_rights,
+            manage_direct_messages=cls.MANAGE_DIRECT_MESSAGES in all_rights,
+            manage_ranks=cls.MANAGE_RANKS in all_rights,
+            manage_linked_peers=cls.MANAGE_LINKED_PEERS in all_rights,
         )

@@ -73,6 +73,7 @@ class User(Peer, metaclass=NoPublicConstructor):
                     bot_active_users=None,
                     bot_verification_icon=None,
                     send_paid_messages_stars=None,
+                    linked_community_id=None,
                 )
             )
         elif isinstance(user, types.User):

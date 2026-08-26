@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from telethon._impl.tl import types
+
 from .button import Button
 
 if TYPE_CHECKING:
@@ -17,8 +19,13 @@ class Text(Button):
     :param text: See below.
     """
 
-    def __init__(self, text: str) -> None:
-        super().__init__(text)
+    def __init__(
+        self,
+        text: str,
+        *,
+        style: types.KeyboardButtonStyle,
+    ) -> None:
+        super().__init__(text, style=style)
 
     @property
     def text(self) -> str:

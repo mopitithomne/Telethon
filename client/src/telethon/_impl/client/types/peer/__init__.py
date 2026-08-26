@@ -63,7 +63,13 @@ def peer_id(peer: abcs.Peer) -> PeerId:
         raise TypeError("unexpected case")
 
 
-def expand_peer(client: Client, peer: abcs.Peer, *, broadcast: bool | None) -> Peer:
+def expand_peer(
+    client: Client,
+    peer: abcs.Peer,
+    *,
+    broadcast: bool | None,
+    monoforum: bool,
+) -> Peer:
     if isinstance(peer, types.PeerUser):
         return User._from_raw(types.UserEmpty(id=peer.user_id))
     elif isinstance(peer, types.PeerChat):
@@ -75,6 +81,7 @@ def expand_peer(client: Client, peer: abcs.Peer, *, broadcast: bool | None) -> P
         channel = types.ChannelForbidden(
             broadcast=broadcast,
             megagroup=not broadcast,
+            monoforum=monoforum,
             id=peer.channel_id,
             access_hash=0,
             title="",

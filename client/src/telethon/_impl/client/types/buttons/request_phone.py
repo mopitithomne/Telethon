@@ -9,6 +9,11 @@ class RequestPhone(Button):
     :param text: See below.
     """
 
-    def __init__(self, text: str) -> None:
-        super().__init__(text)
-        self._raw = types.KeyboardButtonRequestPhone(text=text)
+    def __init__(
+        self,
+        text: str,
+        *,
+        style: types.KeyboardButtonStyle,
+    ) -> None:
+        super().__init__(text, style=style)
+        self._raw = types.KeyboardButtonRequestPhone(text=text, style=style)

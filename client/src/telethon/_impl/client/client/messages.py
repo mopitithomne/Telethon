@@ -46,10 +46,20 @@ async def send_message(
             clear_draft=False,
             noforwards=not text.can_forward,
             update_stickersets_order=False,
+            invert_media=text.invert_media,
+            allow_paid_floodskip=False,
             peer=chat._ref._to_input_peer(),
             reply_to=(
                 types.InputReplyToMessage(
-                    reply_to_msg_id=text.replied_message_id, top_msg_id=None
+                    reply_to_msg_id=text.replied_message_id,
+                    top_msg_id=None,
+                    reply_to_peer_id=None,
+                    quote_text=None,
+                    quote_entities=None,
+                    quote_offset=None,
+                    monoforum_peer_id=None,
+                    todo_item_id=None,
+                    poll_option=None,
                 )
                 if text.replied_message_id
                 else None
@@ -59,7 +69,13 @@ async def send_message(
             reply_markup=getattr(text._raw, "reply_markup", None),
             entities=getattr(text._raw, "entities", None) or None,
             schedule_date=None,
+            schedule_repeat_period=None,
             send_as=None,
+            quick_reply_shortcut=None,
+            effect=None,
+            allow_paid_stars=None,
+            suggested_post=None,
+            rich_message=None,
         )
     else:
         message, entities = parse_message(
@@ -72,9 +88,21 @@ async def send_message(
             clear_draft=False,
             noforwards=False,
             update_stickersets_order=False,
+            invert_media=False,
+            allow_paid_floodskip=False,
             peer=chat._ref._to_input_peer(),
             reply_to=(
-                types.InputReplyToMessage(reply_to_msg_id=reply_to, top_msg_id=None)
+                types.InputReplyToMessage(
+                    reply_to_msg_id=reply_to,
+                    top_msg_id=None,
+                    reply_to_peer_id=None,
+                    quote_text=None,
+                    quote_entities=None,
+                    quote_offset=None,
+                    monoforum_peer_id=None,
+                    todo_item_id=None,
+                    poll_option=None,
+                )
                 if reply_to
                 else None
             ),
@@ -83,7 +111,13 @@ async def send_message(
             reply_markup=keyboard._raw if keyboard else None,
             entities=entities,
             schedule_date=None,
+            schedule_repeat_period=None,
             send_as=None,
+            quick_reply_shortcut=None,
+            effect=None,
+            allow_paid_stars=None,
+            suggested_post=None,
+            rich_message=None,
         )
 
     result = await self(request)
@@ -99,9 +133,18 @@ async def send_message(
                 types.MessageReplyHeader(
                     reply_to_scheduled=False,
                     forum_topic=False,
+                    quote=False,
+                    reply_to_ephemeral=False,
                     reply_to_msg_id=reply_to,
                     reply_to_peer_id=None,
+                    reply_from=None,
+                    reply_media=None,
                     reply_to_top_id=None,
+                    quote_text=None,
+                    quote_entities=None,
+                    quote_offset=None,
+                    todo_item_id=None,
+                    poll_option=None,
                 )
                 if reply_to
                 else None
@@ -127,6 +170,7 @@ async def edit_message(
     html: str | None = None,
     link_preview: bool = False,
     keyboard: KeyboardType | None = None,
+    invert_media: bool = False,
 ) -> Message:
     message, entities = parse_message(
         text=text, markdown=markdown, html=html, allow_empty=False
@@ -135,6 +179,7 @@ async def edit_message(
         await self(
             functions.messages.edit_message(
                 no_webpage=not link_preview,
+                invert_media=invert_media,
                 peer=chat._ref._to_input_peer(),
                 id=message_id,
                 message=message,
@@ -142,6 +187,9 @@ async def edit_message(
                 reply_markup=keyboard._raw if keyboard else None,
                 entities=entities,
                 schedule_date=None,
+                schedule_repeat_period=None,
+                quick_reply_shortcut_id=None,
+                rich_message=None,
             )
         ),
         chat._ref,
@@ -172,7 +220,12 @@ async def delete_messages(
 
 
 async def forward_messages(
-    self: Client, target: Peer | PeerRef, message_ids: list[int], source: Peer | PeerRef
+    self: Client,
+    target: Peer | PeerRef,
+    message_ids: list[int],
+    source: Peer | PeerRef,
+    *,
+    reply_to: int | None = None,
 ) -> list[Message]:
     random_ids = [generate_random_id() for _ in message_ids]
     map = self._build_message_map(
@@ -184,13 +237,35 @@ async def forward_messages(
                 drop_author=False,
                 drop_media_captions=False,
                 noforwards=False,
+                allow_paid_floodskip=False,
                 from_peer=source._ref._to_input_peer(),
                 id=message_ids,
                 random_id=random_ids,
                 to_peer=target._ref._to_input_peer(),
                 top_msg_id=None,
+                reply_to=(
+                    types.InputReplyToMessage(
+                        reply_to_msg_id=reply_to,
+                        top_msg_id=None,
+                        reply_to_peer_id=None,
+                        quote_text=None,
+                        quote_entities=None,
+                        quote_offset=None,
+                        monoforum_peer_id=None,
+                        todo_item_id=None,
+                        poll_option=None,
+                    )
+                    if reply_to
+                    else None
+                ),
                 schedule_date=None,
+                schedule_repeat_period=None,
                 send_as=None,
+                quick_reply_shortcut=None,
+                effect=None,
+                video_timestamp=None,
+                allow_paid_stars=None,
+                suggested_post=None,
             )
         ),
         target._ref,
@@ -383,6 +458,8 @@ class SearchList(MessageList):
                 peer=self._peer._to_input_peer(),
                 q=self._query,
                 from_id=None,
+                saved_peer_id=None,
+                saved_reaction=None,
                 top_msg_id=None,
                 filter=self._filter,
                 min_date=0,
@@ -447,7 +524,11 @@ class GlobalSearchList(MessageList):
     async def _fetch_next(self) -> None:
         result = await self._client(
             functions.messages.search_global(
+                broadcasts_only=False,
+                groups_only=False,
+                users_only=False,
                 folder_id=None,
+                community=None,
                 q=self._query,
                 filter=types.InputMessagesFilterEmpty(),
                 min_date=0,
@@ -517,6 +598,7 @@ async def unpin_message(
             functions.messages.unpin_all_messages(
                 peer=chat._ref._to_input_peer(),
                 top_msg_id=None,
+                saved_peer_id=None,
             )
         )
     else:

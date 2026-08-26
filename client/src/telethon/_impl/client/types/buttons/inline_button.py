@@ -1,5 +1,7 @@
 import abc
 
+from telethon._impl.tl import types
+
 from .button import Button
 
 
@@ -27,10 +29,15 @@ class InlineButton(Button, abc.ABC):
     :param text: See below.
     """
 
-    def __init__(self, text: str) -> None:
+    def __init__(
+        self,
+        text: str,
+        *,
+        style: types.KeyboardButtonStyle,
+    ) -> None:
         if self.__class__ == InlineButton:
             raise TypeError(
                 f"Can't instantiate abstract class {self.__class__.__name__}"
             )
         else:
-            super().__init__(text)
+            super().__init__(text, style=style)

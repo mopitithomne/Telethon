@@ -1,4 +1,5 @@
-from ....tl import types
+from telethon._impl.tl import types
+
 from .button import Button
 
 
@@ -9,6 +10,11 @@ class RequestGeoLocation(Button):
     :param text: See below.
     """
 
-    def __init__(self, text: str) -> None:
-        super().__init__(text)
-        self._raw = types.KeyboardButtonRequestGeoLocation(text=text)
+    def __init__(
+        self,
+        text: str,
+        *,
+        style: types.KeyboardButtonStyle,
+    ) -> None:
+        super().__init__(text, style=style)
+        self._raw = types.KeyboardButtonRequestGeoLocation(text=text, style=style)

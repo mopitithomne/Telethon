@@ -1249,7 +1249,13 @@ class Client:
         """
         return await resolve_phone(self, phone)
 
-    async def resolve_username(self, username: str, /) -> Peer:
+    async def resolve_username(
+        self,
+        username: str,
+        /,
+        *,
+        referer: str | None = None,
+    ) -> Peer:
         """
         Resolve a username into a :term:`peer`.
 
@@ -1269,7 +1275,7 @@ class Client:
 
             print(await client.resolve_username('@cat'))
         """
-        return await resolve_username(self, username)
+        return await resolve_username(self, username, referer=referer)
 
     async def run_until_disconnected(self) -> None:
         """

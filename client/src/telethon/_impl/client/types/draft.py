@@ -64,7 +64,10 @@ class Draft(metaclass=NoPublicConstructor):
         This is also the chat where the message will be sent to by :meth:`send`.
         """
         return self._chat_map.get(peer_id(self._peer)) or expand_peer(
-            self._client, self._peer, broadcast=None
+            self._client,
+            self._peer,
+            broadcast=None,
+            monoforum=False,
         )
 
     @property
@@ -79,7 +82,11 @@ class Draft(metaclass=NoPublicConstructor):
         """
         Get the message identifier of message this draft will reply to once sent.
         """
-        return self._raw.reply_to_msg_id or None
+        reply_to = getattr(self._raw, "reply_to", None)
+        if reply_to is None:
+            return None
+        else:
+            return getattr(reply_to, "reply_to_msg_id", None)
 
     @property
     def text(self) -> str | None:
@@ -194,9 +201,21 @@ class Draft(metaclass=NoPublicConstructor):
                 clear_draft=True,
                 noforwards=False,
                 update_stickersets_order=False,
+                invert_media=False,
+                allow_paid_floodskip=False,
                 peer=self._peer_ref()._to_input_peer(),
                 reply_to=(
-                    types.InputReplyToMessage(reply_to_msg_id=reply_to, top_msg_id=None)
+                    types.InputReplyToMessage(
+                        reply_to_msg_id=reply_to,
+                        top_msg_id=None,
+                        reply_to_peer_id=None,
+                        quote_text=None,
+                        quote_entities=None,
+                        quote_offset=None,
+                        monoforum_peer_id=None,
+                        todo_item_id=None,
+                        poll_option=None,
+                    )
                     if reply_to
                     else None
                 ),
@@ -205,7 +224,13 @@ class Draft(metaclass=NoPublicConstructor):
                 reply_markup=None,
                 entities=entities,
                 schedule_date=None,
+                schedule_repeat_period=None,
                 send_as=None,
+                quick_reply_shortcut=None,
+                effect=None,
+                allow_paid_stars=None,
+                suggested_post=None,
+                rich_message=None,
             )
         )
         if isinstance(result, types.UpdateShortSentMessage):
@@ -224,9 +249,18 @@ class Draft(metaclass=NoPublicConstructor):
                     types.MessageReplyHeader(
                         reply_to_scheduled=False,
                         forum_topic=False,
+                        quote=False,
+                        reply_to_ephemeral=False,
                         reply_to_msg_id=reply_to,
                         reply_to_peer_id=None,
+                        reply_from=None,
+                        reply_media=None,
                         reply_to_top_id=None,
+                        quote_text=None,
+                        quote_entities=None,
+                        quote_offset=None,
+                        todo_item_id=None,
+                        poll_option=None,
                     )
                     if reply_to
                     else None

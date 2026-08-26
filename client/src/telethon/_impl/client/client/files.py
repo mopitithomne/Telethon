@@ -217,7 +217,11 @@ async def send_file(
             )
         else:
             input_media = types.InputMediaDocumentExternal(
-                spoiler=False, url=file, ttl_seconds=None
+                spoiler=False,
+                url=file,
+                ttl_seconds=None,
+                video_cover=None,
+                video_timestamp=None,
             )
         return await do_send_file(
             self, chat, input_media, message, entities, reply_to, keyboard
@@ -235,9 +239,11 @@ async def send_file(
     if as_photo:
         input_media = types.InputMediaUploadedPhoto(
             spoiler=False,
+            live_photo=False,
             file=input_file,
             stickers=None,
             ttl_seconds=None,
+            video=None,
         )
 
     # Only bother to calculate attributes when sending documents.
@@ -270,6 +276,8 @@ async def send_file(
                         w=width,
                         h=height,
                         preload_prefix_size=None,
+                        video_start_ts=None,
+                        video_codec=None,
                     )
                 )
 
@@ -282,6 +290,8 @@ async def send_file(
             mime_type=mime_type,
             attributes=attributes,
             stickers=None,
+            video_cover=None,
+            video_timestamp=None,
             ttl_seconds=None,
         )
 
@@ -308,9 +318,21 @@ async def do_send_file(
                 clear_draft=False,
                 noforwards=False,
                 update_stickersets_order=False,
+                invert_media=False,
+                allow_paid_floodskip=False,
                 peer=chat._ref._to_input_peer(),
                 reply_to=(
-                    types.InputReplyToMessage(reply_to_msg_id=reply_to, top_msg_id=None)
+                    types.InputReplyToMessage(
+                        reply_to_msg_id=reply_to,
+                        top_msg_id=None,
+                        reply_to_peer_id=None,
+                        quote_text=None,
+                        quote_entities=None,
+                        quote_offset=None,
+                        monoforum_peer_id=None,
+                        todo_item_id=None,
+                        poll_option=None,
+                    )
                     if reply_to
                     else None
                 ),
@@ -320,7 +342,12 @@ async def do_send_file(
                 reply_markup=keyboard._raw if keyboard else None,
                 entities=entities,
                 schedule_date=None,
+                schedule_repeat_period=None,
                 send_as=None,
+                quick_reply_shortcut=None,
+                effect=None,
+                allow_paid_stars=None,
+                suggested_post=None,
             )
         ),
         chat._ref,

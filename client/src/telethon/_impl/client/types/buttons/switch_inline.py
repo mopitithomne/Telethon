@@ -10,10 +10,20 @@ class SwitchInline(InlineButton):
     :param query: See below.
     """
 
-    def __init__(self, text: str, query: str | None = None) -> None:
-        super().__init__(text)
+    def __init__(
+        self,
+        text: str,
+        query: str | None = None,
+        *,
+        style: types.KeyboardButtonStyle,
+    ) -> None:
+        super().__init__(text, style=style)
         self._raw = types.KeyboardButtonSwitchInline(
-            same_peer=False, text=text, query=query or "", peer_types=None
+            same_peer=False,
+            text=text,
+            query=query or "",
+            peer_types=None,
+            style=style,
         )
 
     @property

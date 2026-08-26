@@ -11,12 +11,19 @@ class Callback(InlineButton):
     :param data: See below.
     """
 
-    def __init__(self, text: str, data: bytes | None = None) -> None:
-        super().__init__(text)
+    def __init__(
+        self,
+        text: str,
+        data: bytes | None = None,
+        *,
+        style: types.KeyboardButtonStyle,
+    ) -> None:
+        super().__init__(text, style=style)
         self._raw = types.KeyboardButtonCallback(
             requires_password=False,
             text=text,
             data=data or text.encode("utf-8", errors="replace"),
+            style=style,
         )
 
     @property

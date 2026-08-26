@@ -169,7 +169,10 @@ class MessageRead(Event):
         pid = peer_id(peer)
         if pid not in self._chat_map:
             self._chat_map[pid] = expand_peer(
-                self._client, peer, broadcast=getattr(self._raw, "post", None)
+                self._client,
+                peer,
+                broadcast=getattr(self._raw, "post", None),
+                monoforum=False,
             )
         return self._chat_map[pid]
 
