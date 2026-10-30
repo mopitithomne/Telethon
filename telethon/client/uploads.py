@@ -125,7 +125,7 @@ class UploadMethods:
             attributes: 'typing.Sequence[types.TypeDocumentAttribute]' = None,
             thumb: 'hints.FileLike' = None,
             allow_cache: bool = True,
-            parse_mode: str = (),
+            parse_mode: typing.Optional[str] = (),
             formatting_entities: typing.Optional[
                 typing.Union[
                     typing.List[types.TypeMessageEntity], typing.List[typing.List[types.TypeMessageEntity]]
@@ -143,6 +143,14 @@ class UploadMethods:
             nosound_video: bool = None,
             send_as: typing.Optional['hints.EntityLike'] = None,
             message_effect_id: typing.Optional[int] = None,
+            noforwards: bool = False,
+            update_stickersets_order: bool = False,
+            invert_media: bool = False,
+            allow_paid_floodskip: bool = False,
+            schedule_repeat_period: typing.Optional[int] = None,
+            quick_reply_shortcut: typing.Optional['types.TypeInputQuickReplyShortcut'] = None,
+            allow_paid_stars: typing.Optional[int] = None,
+            suggested_post: typing.Optional['types.TypeSuggestedPost'] = None,
             **kwargs) -> typing.Union[typing.List[typing.Any], typing.Any]:
         """
         Sends message with the given file to the specified entity.
@@ -276,7 +284,7 @@ class UploadMethods:
                 If `True` the video will be sent as a video note,
                 also known as a round video message.
 
-            buttons (`list`, `custom.Button <telethon.tl.custom.button.Button>`, :tl:`KeyboardButton`):
+            buttons (`list`, `custom.Button <telethon.tl.custom.button.Button>`, :tl:`KeyboardButton`, :tl:`KeyboardInlineButton`):
                 The matrix (list of lists), row list or button to be shown
                 after sending the message. This parameter will only work if
                 you have signed in as a bot. You can also pass your own
@@ -341,6 +349,30 @@ class UploadMethods:
 
             message_effect_id (`int`, optional):
                 Unique identifier of the message effect to be added to the message; for private chats only
+
+            noforwards (`bool`, optional):
+                Whether to make the message not forwardable.
+
+            update_stickersets_order (`bool`, optional):
+                Whether to update sticker set order after sending a new sticker.
+
+            invert_media (`bool`, optional):
+                Whether to change the position of media in the message.
+
+            allow_paid_floodskip (`bool`, optional):
+                Whether to allow a bot to pay to bypass broadcast limits.
+
+            schedule_repeat_period (`int`, optional):
+                Whether the scheduled message should repeat after a certain interval.
+
+            quick_reply_shortcut (`TypeInputQuickReplyShortcut`, optional):
+                The quick-reply shortcut to associate with the sent message.
+
+            allow_paid_stars (`int`, optional):
+                The maximum amount of Stars to pay for sending the message.
+
+            suggested_post (`TypeSuggestedPost`, optional):
+                Suggested-post metadata for channel messages.
 
         Returns
             The `Message <telethon.tl.custom.message.Message>` (or messages)
@@ -411,6 +443,11 @@ class UploadMethods:
         # First check if the user passed an iterable, in which case
         # we may want to send grouped.
         if utils.is_list_like(file):
+            if schedule_repeat_period is not None or suggested_post is not None:
+                raise ValueError(
+                    'schedule_repeat_period and suggested_post are not supported for albums'
+                )
+
             sent_count = 0
             used_callback = None if not progress_callback else (
                 lambda s, t: progress_callback(sent_count + s, len(file))
@@ -441,7 +478,13 @@ class UploadMethods:
                     parse_mode=parse_mode, silent=silent, schedule=schedule,
                     supports_streaming=supports_streaming, clear_draft=clear_draft,
                     force_document=force_document, background=background,
-                    send_as=send_as, message_effect_id=message_effect_id
+                    send_as=send_as, message_effect_id=message_effect_id,
+                    noforwards=noforwards,
+                    update_stickersets_order=update_stickersets_order,
+                    invert_media=invert_media,
+                    allow_paid_floodskip=allow_paid_floodskip,
+                    quick_reply_shortcut=quick_reply_shortcut,
+                    allow_paid_stars=allow_paid_stars
                 )
                 file = file[10:]
                 captions = captions[10:]
@@ -478,8 +521,16 @@ class UploadMethods:
             entities=msg_entities, reply_markup=markup, silent=silent,
             schedule_date=schedule, clear_draft=clear_draft,
             background=background,
+            noforwards=noforwards,
+            update_stickersets_order=update_stickersets_order,
+            invert_media=invert_media,
+            allow_paid_floodskip=allow_paid_floodskip,
+            schedule_repeat_period=schedule_repeat_period,
             send_as=await self.get_input_entity(send_as) if send_as else None,
-            effect=message_effect_id
+            quick_reply_shortcut=quick_reply_shortcut,
+            effect=message_effect_id,
+            allow_paid_stars=allow_paid_stars,
+            suggested_post=suggested_post
         )
         return self._get_response_message(request, await self(request), entity)
 
@@ -490,7 +541,13 @@ class UploadMethods:
                           supports_streaming=None, clear_draft=None,
                           force_document=False, background=None, ttl=None,
                           send_as: typing.Optional['hints.EntityLike'] = None,
-                          message_effect_id: typing.Optional[int] = None):
+                          message_effect_id: typing.Optional[int] = None,
+                          noforwards: bool = False,
+                          update_stickersets_order: bool = False,
+                          invert_media: bool = False,
+                          allow_paid_floodskip: bool = False,
+                          quick_reply_shortcut: typing.Optional['types.TypeInputQuickReplyShortcut'] = None,
+                          allow_paid_stars: typing.Optional[int] = None):
         """Specialized version of .send_file for albums"""
         # We don't care if the user wants to avoid cache, we will use it
         # anyway. Why? The cached version will be exactly the same thing
@@ -566,8 +623,14 @@ class UploadMethods:
             entity, reply_to=None if reply_to is None else types.InputReplyToMessage(reply_to), multi_media=media,
             silent=silent, schedule_date=schedule, clear_draft=clear_draft,
             background=background,
+            noforwards=noforwards,
+            update_stickersets_order=update_stickersets_order,
+            invert_media=invert_media,
+            allow_paid_floodskip=allow_paid_floodskip,
             send_as=await self.get_input_entity(send_as) if send_as else None,
-            effect=message_effect_id
+            quick_reply_shortcut=quick_reply_shortcut,
+            effect=message_effect_id,
+            allow_paid_stars=allow_paid_stars
         )
         result = await self(request)
 
