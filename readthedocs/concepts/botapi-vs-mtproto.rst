@@ -332,5 +332,5 @@ Key differences:
 .. _pyTelegramBotAPI: https://github.com/eternnoir/pyTelegramBotAPI
 .. _aiohttp: https://docs.aiohttp.org/en/stable
 .. _aiogram: https://aiogram.readthedocs.io
-.. _dumbot: https://github.com/Lonami/dumbot
+.. _dumbot: https://codeberg.org/Lonami/dumbot
 .. _echobot.py: https://github.com/python-telegram-bot/python-telegram-bot/blob/master/examples/echobot.py
