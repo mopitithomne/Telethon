@@ -6,6 +6,8 @@ import pytest
 
 from telethon import TelegramClient
 from telethon.client import MessageMethods
+from telethon.client.uploads import UploadMethods
+from telethon.tl import types
 from telethon.tl.types import PeerChat, MessageMediaDocument, Message, MessageEntityBold
 
 
@@ -77,8 +79,51 @@ class TestMessageMethods:
                 formatting_entities=formatting_entities or message.entities,
                 reply_to=None, silent=None, attributes=None, parse_mode=(),
                 force_document=False, thumb=None, buttons=None,
-                clear_draft=False, schedule=None, supports_streaming=False,
+                clear_draft=False, noforwards=False,
+                update_stickersets_order=False, invert_media=False,
+                allow_paid_floodskip=False, schedule_repeat_period=None,
+                schedule=None, supports_streaming=False,
                 comment_to=None, background=None, nosound_video=None,
-                send_as=None, message_effect_id=None,
+                send_as=None, quick_reply_shortcut=None, message_effect_id=None,
+                allow_paid_stars=None, suggested_post=None,
             )
             assert result == expected_result
+
+
+@pytest.mark.asyncio
+async def test_send_file_forwards_message_options():
+    class MockedClient(UploadMethods):
+        async def get_input_entity(self, entity):
+            return types.InputPeerSelf()
+
+        async def _file_to_media(self, *args, **kwargs):
+            return None, types.InputMediaEmpty(), None
+
+        async def _parse_message_text(self, text, parse_mode):
+            return text, []
+
+        def build_reply_markup(self, buttons):
+            return None
+
+        async def __call__(self, request):
+            self.request = request
+
+        def _get_response_message(self, request, result, entity):
+            return request
+
+    client = MockedClient()
+    options = {
+        'noforwards': True,
+        'update_stickersets_order': True,
+        'invert_media': True,
+        'allow_paid_floodskip': True,
+        'schedule_repeat_period': 60,
+        'quick_reply_shortcut': object(),
+        'allow_paid_stars': 5,
+        'suggested_post': object(),
+    }
+
+    await client.send_file('me', b'file', **options)
+
+    for name, value in options.items():
+        assert getattr(client.request, name) == value
